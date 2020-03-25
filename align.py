@@ -35,14 +35,16 @@ for i in range(len(tenx_contigs)):
     tenx_contig = tenx_contigs[i]
     name = tenx_names[i]
     tenx_contig = re.sub(r'([^ACTG])', "", tenx_contig)
-    mid = (int)(len(tenx_contig) / 2)
-    chunk = tenx_contig[mid - 10:mid + 10]
+    mid = int(len(tenx_contig) / 2)
+    start_indices = [20, (mid//4), (3*mid//8), mid - 10, (5*mid//8), (3*mid)//4, len(tenx_contig)-40]
+    chunks = [tenx_contig[20:40], tenx_contig[mid//4:mid//4+20], tenx_contig[(3*mid//8):(3*mid//8)+20], tenx_contig[mid - 10:mid + 10], tenx_contig[(5*mid//8):(5*mid//8)+20], tenx_contig[(3*mid)//4:(3*mid)//4 + 20], tenx_contig[len(tenx_contig)-40:len(tenx_contig)-20]]
 
     j = 0
     matches = []
-    for k in range(len(pipeline_contigs)):
-        if chunk in pipeline_contigs[k]:
-            matches.append(k)
+    for pp_contig_num in range(len(pipeline_contigs)):
+        for chunk_num in range(len(chunks)):
+            if chunks[chunk_num] in pipeline_contigs[pp_contig_num]:
+                matches.append([pp_contig_num, chunk_num])
     if len(matches) == 0:
         with open(new_file, "a") as f:
             f.write(name + "No matching contig" + "\n\n")
@@ -52,10 +54,10 @@ for i in range(len(tenx_contigs)):
 
     max_length = []
     for j in matches:
-        pipeline_contig = pipeline_contigs[j]
-        offset = pipeline_contig.index(chunk) - mid + 10
-        start = mid
-        end = mid
+        pipeline_contig = pipeline_contigs[j[0]]
+        offset = pipeline_contig.index(chunks[j[1]]) - start_indices[j[1]]
+        start = start_indices[j[1]] + 10
+        end = start_indices[j[1]] + 10
 
         if offset >= 0:
             while (start >= 4) and (tenx_contig[start] == pipeline_contig[start + offset] or tenx_contig[start - 4:start - 1] == pipeline_contig[start + offset - 4:start + offset - 1]):
@@ -69,7 +71,7 @@ for i in range(len(tenx_contigs)):
                 end += 1
 
         if len(max_length) == 0 or (end-start) > max_length[0]:
-            max_length = [end-start, start, end, j]
+            max_length = [end-start, start, end, j[0]]
 
     start = max_length[1]
     end = max_length[2]
