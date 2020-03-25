@@ -36,8 +36,8 @@ for i in range(len(tenx_contigs)):
     name = tenx_names[i]
     tenx_contig = re.sub(r'([^ACTG])', "", tenx_contig)
     mid = int(len(tenx_contig) / 2)
-    start_indices = [20, (mid//4), (3*mid//8), mid - 10, (5*mid//8), (3*mid)//4, len(tenx_contig)-40]
-    chunks = [tenx_contig[20:40], tenx_contig[mid//4:mid//4+20], tenx_contig[(3*mid//8):(3*mid//8)+20], tenx_contig[mid - 10:mid + 10], tenx_contig[(5*mid//8):(5*mid//8)+20], tenx_contig[(3*mid)//4:(3*mid)//4 + 20], tenx_contig[len(tenx_contig)-40:len(tenx_contig)-20]]
+    start_indices = [20, (mid//4), (3*mid//8), mid-5, (5*mid//8), (3*mid)//4, len(tenx_contig)-40]
+    chunks = [tenx_contig[20:30], tenx_contig[mid//4:mid//4+10], tenx_contig[(3*mid//8):(3*mid//8)+10], tenx_contig[mid-5:mid+5], tenx_contig[(5*mid//8):(5*mid//8)+10], tenx_contig[(3*mid)//4:(3*mid)//4 + 10], tenx_contig[len(tenx_contig)-40:len(tenx_contig)-30]]
 
     j = 0
     matches = []
@@ -56,8 +56,8 @@ for i in range(len(tenx_contigs)):
     for j in matches:
         pipeline_contig = pipeline_contigs[j[0]]
         offset = pipeline_contig.index(chunks[j[1]]) - start_indices[j[1]]
-        start = start_indices[j[1]] + 10
-        end = start_indices[j[1]] + 10
+        start = start_indices[j[1]] + 5
+        end = start_indices[j[1]] + 5
 
         if offset >= 0:
             while (start >= 4) and (tenx_contig[start] == pipeline_contig[start + offset] or tenx_contig[start - 4:start - 1] == pipeline_contig[start + offset - 4:start + offset - 1]):
@@ -75,9 +75,11 @@ for i in range(len(tenx_contigs)):
 
     start = max_length[1]
     end = max_length[2]
-    if (end-2-start) / len(tenx_contig) * 100 < 20:
+    if (end-2-start) / len(tenx_contig) * 100 < 5:
         with open(new_file, "a") as f:
             f.write(name + "No matching contig" + "\n\n")
+        with open("unmatched.fasta", "a") as f:
+            f.write(name + tenx_contig + "\n")
         continue
 
     pipeline_contig = pipeline_contigs[max_length[3]]
@@ -85,7 +87,7 @@ for i in range(len(tenx_contigs)):
     count += 1
     with open(new_file, "a") as f:
         f.write(name + pipeline_names[max_length[3]])
-        f.write(tenx_contig[start + 1:end - 2] + "\n")
+        f.write(tenx_contig[start + 1:end - 1] + "\n")
         f.write("% match - 10x contig-->consensus: " + str((end-2-start) / len(tenx_contig) * 100) + "\n"
                 + "% match - consensus-->10x contig: " + str((end-2-start) / len(pipeline_contig) * 100) + "\n\n")
 
